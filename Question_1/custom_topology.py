@@ -63,20 +63,16 @@ class CustomTopo(Topo):
             self.addLink(h5, s3)
             self.addLink(h6, s4)
             self.addLink(h7, s4)
-            self.addLink(s1, s2, cls=TCLink, bw=100)
-            self.addLink(s2, s3, cls=TCLink, bw=50, loss=loss)
-            self.addLink(s3, s4, cls=TCLink, bw=100)
-            # Extra link based on the scenario:
-            if scenario == 'c1':
-                self.addLink(s2, s4, cls=TCLink, bw=100)
-            elif scenario in ['c2a', 'c2b', 'c2c', 'c2d']:
-                self.addLink(s1, s4, cls=TCLink, bw=100)
+            self.addLink(s1, s2, cls=TCLink, bw=100, use_htb=True,
+                         max_queue_size=1000, tcopts='htb default 1 r2q 1')
+            self.addLink(s2, s3, cls=TCLink, bw=50, loss=loss, use_htb=True,
+                         max_queue_size=1000, tcopts='htb default 1 r2q 1')
+            self.addLink(s3, s4, cls=TCLink, bw=100, use_htb=True,
+                         max_queue_size=1000, tcopts='htb default 1 r2q 1')
+
 
 # Experiment (a): Single flow (client on H1, server on H7).
 def run_experiment_a(net, cc_scheme):
-    h1 = net.get('h1')
-    h7 = net.get('h7')
-    info('*** Starting iperf3 server on h7\n')
     h7.cmd('iperf3 -s -D')
     time.sleep(2)
     info('*** Running iperf3 client on h1\n')
@@ -91,21 +87,23 @@ def run_experiment_b(net, cc_scheme):
     h4 = net.get('h4')
     h7 = net.get('h7')
     info('*** Starting iperf3 server on h7\n')
-    h7.cmd('iperf3 -s -D')
+    h7.cmd('iperf3 -s -D -p 5201')
+    h7.cmd('iperf3 -s -D -p 5202')
+    h7.cmd('iperf3 -s -D -p 5203')
     time.sleep(2)
     
-    def client_flow(host, start_delay, duration):
+    def client_flow(host, start_delay, duration, port):
         time.sleep(start_delay)
         info('*** {} starting client for {} seconds\n'.format(host.name, duration))
         result = host.cmd('iperf3 -c ' + h7.IP() +
-                           ' -p 5201 -b 10M -P 10 -t {} -C {}'.format(duration, cc_scheme))
+                           ' -p {} -b 10M -P 10 -t {} -C {}'.format(port, duration, cc_scheme))
         info('*** {} flow finished\n'.format(host.name))
         info(result)
-    
+
     threads = []
-    threads.append(threading.Thread(target=client_flow, args=(h1, 0, 150)))
-    threads.append(threading.Thread(target=client_flow, args=(h3, 15, 120)))
-    threads.append(threading.Thread(target=client_flow, args=(h4, 30, 90)))
+    threads.append(threading.Thread(target=client_flow, args=(h1, 0, 150, 5201)))
+    threads.append(threading.Thread(target=client_flow, args=(h3, 15, 120, 5202)))
+    threads.append(threading.Thread(target=client_flow, args=(h4, 30, 90, 5203)))
     
     for t in threads:
         t.start()
@@ -122,7 +120,7 @@ def run_experiment_c(net, cc_scheme, scenario):
     info('*** Starting iperf3 server on h7\n')
     h7.cmd('iperf3 -s -D')
     time.sleep(2)
-    
+
     if scenario == 'c1':
         info('*** Running iperf3 client on h3\n')
         result = h3.cmd('iperf3 -c ' + h7.IP() +
