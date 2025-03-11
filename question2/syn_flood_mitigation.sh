@@ -12,7 +12,7 @@ sysctl -w net.ipv4.tcp_synack_retries=2
 
 echo "Starting tcpdump to capture packets for 240 seconds..."
 # Use timeout to automatically stop tcpdump after 240 seconds
-timeout 240 tcpdump -i wlo1 -w /home/chirag/Computer_Networks/assignment_2/capture.pcap &
+timeout 240 tcpdump -i wlo1 -w /home/chirag/Computer_Networks/Exploring_Conjestion_Protocol/question2/capture.pcap &
 TCPDUMP_PID=$!
 echo "tcpdump started with PID: $TCPDUMP_PID"
 

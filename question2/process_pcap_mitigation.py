@@ -118,11 +118,20 @@ def extract_tcp_fields(pcap_file, csv_file):
         subprocess.run(command, stdout=f)
 
 if __name__ == '__main__':
-    pcap_file = '/home/chirag/Computer_Networks/assignment_2/capture_mitigation.pcap'
-    csv_file = '/home/chirag/Computer_Networks/assignment_2/tcp_fields_mitigation.csv'
+    pcap_file = '/home/chirag/Computer_Networks/Exploring_Conjestion_Protocol/question2/capture.pcap'
+    csv_file = '/home/chirag/Computer_Networks/Exploring_Conjestion_Protocol/question2/tcp_fields.csv'
     
     extract_tcp_fields(pcap_file, csv_file)
     
     connection_data = process_tcp_fields(csv_file)
     print("Processed {} connections.".format(len(connection_data)))
-    plot_connection_durations(connection_data, 'Connection Duration vs. Connection Start Time (With Mitigation)', 20, 120)
+    
+    if connection_data:
+        # Determine attack start and end times based on the connection data
+        attack_start = min(connection_data, key=lambda x: x[0])[0]
+        attack_end = max(connection_data, key=lambda x: x[0])[0]
+    else:
+        attack_start = 0
+        attack_end = 0
+    
+    plot_connection_durations(connection_data, 'Connection Duration vs. Connection Start Time (With Mitigation)', attack_start, attack_end)

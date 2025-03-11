@@ -119,8 +119,8 @@ def extract_tcp_fields(pcap_file, csv_file):
         subprocess.run(command, stdout=f)
 
 if __name__ == '__main__':
-    pcap_file = '/home/chirag/Computer_Networks/assignment_2/capture.pcap'
-    csv_file = '/home/chirag/Computer_Networks/assignment_2/tcp_fields.csv'
+    pcap_file = '/home/chirag/Computer_Networks/Exploring_Conjestion_Protocol/question2/capture.pcap'
+    csv_file = '/home/chirag/Computer_Networks/Exploring_Conjestion_Protocol/question2/tcp_fields.csv'
     
     extract_tcp_fields(pcap_file, csv_file)
     
