@@ -63,16 +63,18 @@ class CustomTopo(Topo):
             self.addLink(h5, s3)
             self.addLink(h6, s4)
             self.addLink(h7, s4)
-            self.addLink(s1, s2, cls=TCLink, bw=100, use_htb=True,
-                         max_queue_size=1000, tcopts='htb default 1 r2q 1')
-            self.addLink(s2, s3, cls=TCLink, bw=50, loss=loss, use_htb=True,
-                         max_queue_size=1000, tcopts='htb default 1 r2q 1')
-            self.addLink(s3, s4, cls=TCLink, bw=100, use_htb=True,
-                         max_queue_size=1000, tcopts='htb default 1 r2q 1')
+            self.addLink(s1, s2, cls=TCLink, bw=100,
+                         )
+            self.addLink(s2, s3, cls=TCLink, bw=50, loss=loss,
+                         )
+            self.addLink(s3, s4, cls=TCLink, bw=100,
+                         )
 
 
 # Experiment (a): Single flow (client on H1, server on H7).
 def run_experiment_a(net, cc_scheme):
+    h1 = net.get('h1')
+    h7 = net.get('h7')
     h7.cmd('iperf3 -s -D')
     time.sleep(2)
     info('*** Running iperf3 client on h1\n')
@@ -118,7 +120,9 @@ def run_experiment_c(net, cc_scheme, scenario):
     h4 = net.get('h4')
     h7 = net.get('h7')
     info('*** Starting iperf3 server on h7\n')
-    h7.cmd('iperf3 -s -D')
+    h7.cmd('iperf3 -s -D -p 5201')
+    h7.cmd('iperf3 -s -D -p 5202')
+    h7.cmd('iperf3 -s -D -p 5203')
     time.sleep(2)
 
     if scenario == 'c1':
@@ -127,31 +131,31 @@ def run_experiment_c(net, cc_scheme, scenario):
                         ' -p 5201 -b 10M -P 10 -t 150 -C ' + cc_scheme)
         info(result)
     elif scenario == 'c2a':
-        def client_flow(host):
-            result = host.cmd('iperf3 -c ' + h7.IP() +
-                              ' -p 5201 -b 10M -P 10 -t 150 -C ' + cc_scheme)
+        def client_flow(host, port):
+            result = host.cmd('iperf3 -c ' + str(h7.IP()) +
+                              ' -p ' + str(port) + ' -b 10M -P 10 -t 150 -C ' + cc_scheme)
             info(result)
-        t1 = threading.Thread(target=client_flow, args=(h1,))
-        t2 = threading.Thread(target=client_flow, args=(h2,))
+        t1 = threading.Thread(target=client_flow, args=(h1,5201))
+        t2 = threading.Thread(target=client_flow, args=(h2,5202))
         t1.start(); t2.start()
         t1.join(); t2.join()
     elif scenario == 'c2b':
-        def client_flow(host):
-            result = host.cmd('iperf3 -c ' + h7.IP() +
-                              ' -p 5201 -b 10M -P 10 -t 150 -C ' + cc_scheme)
+        def client_flow(host, port):
+            result = host.cmd('iperf3 -c ' + str(h7.IP()) +
+                              ' -p ' + str(port) +' -b 10M -P 10 -t 150 -C ' + cc_scheme)
             info(result)
-        t1 = threading.Thread(target=client_flow, args=(h1,))
-        t3 = threading.Thread(target=client_flow, args=(h3,))
+        t1 = threading.Thread(target=client_flow, args=(h1,5201))
+        t3 = threading.Thread(target=client_flow, args=(h3,5202))
         t1.start(); t3.start()
         t1.join(); t3.join()
     elif scenario in ['c2c', 'c2d']:
-        def client_flow(host):
-            result = host.cmd('iperf3 -c ' + h7.IP() +
-                              ' -p 5201 -b 10M -P 10 -t 150 -C ' + cc_scheme)
+        def client_flow(host, port):
+            result = host.cmd('iperf3 -c ' + str(h7.IP()) +
+                              ' -p ' + str(port) +' -b 10M -P 10 -t 150 -C ' + cc_scheme)
             info(result)
-        t1 = threading.Thread(target=client_flow, args=(h1,))
-        t3 = threading.Thread(target=client_flow, args=(h3,))
-        t4 = threading.Thread(target=client_flow, args=(h4,))
+        t1 = threading.Thread(target=client_flow, args=(h1,5201))
+        t3 = threading.Thread(target=client_flow, args=(h3,5202))
+        t4 = threading.Thread(target=client_flow, args=(h4,5203))
         t1.start(); t3.start(); t4.start()
         t1.join(); t3.join(); t4.join()
 
